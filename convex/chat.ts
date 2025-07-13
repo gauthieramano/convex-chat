@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 export const sendMessage = mutation({
@@ -11,5 +11,17 @@ export const sendMessage = mutation({
     console.log("This TypeScript function is running on the server.");
 
     await ctx.db.insert("messages", args);
+  },
+});
+
+export const fetchMessages = query({
+  args: {},
+
+  handler: async (ctx) => {
+    // Get most recent messages first
+    const messages = await ctx.db.query("messages").order("desc").take(50);
+
+    // Reverse the list so that it's in a chronological order.
+    return messages.reverse();
   },
 });
