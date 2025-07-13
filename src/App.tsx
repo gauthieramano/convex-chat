@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { faker } from "@faker-js/faker";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 
 // For demo purposes. In a real app, you'd have real user data.
@@ -9,11 +9,7 @@ const NAME = getOrSetFakeName();
 export default function App() {
   const [newMessageText, setNewMessageText] = useState("");
 
-  const messages = [
-    { _id: "1", user: "Alice", body: "Good morning!" },
-    { _id: "2", user: NAME, body: "Beautiful sunrise today" },
-  ];
-
+  const messages = useQuery(api.chat.fetchMessages);
   const sendMessage = useMutation(api.chat.sendMessage);
 
   useEffect(() => {
