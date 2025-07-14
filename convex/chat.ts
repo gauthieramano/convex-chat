@@ -1,5 +1,20 @@
-import { mutation, query } from "./_generated/server";
+import { api, internal } from "./_generated/api";
+import { mutation, query, internalAction } from "./_generated/server";
 import { v } from "convex/values";
+
+const WIKI_URL =
+  "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=";
+
+/** Search for the string after `"/wiki "` */
+const WIKI_REGEX = /^\/wiki\s(.+)/;
+
+function getSummaryFromJson(data: any) {
+  console.log(JSON.stringify(data, null, 2));
+
+  const firstPageId = Object.keys(data.query.pages)[0];
+
+  return data.query.pages[firstPageId].extract;
+}
 
 export const sendMessage = mutation({
   args: {
@@ -11,6 +26,14 @@ export const sendMessage = mutation({
     console.log("This TypeScript function is running on the server.");
 
     await ctx.db.insert("messages", args);
+
+    const wikiRegexResult = args.body.match(WIKI_REGEX);
+
+    if (wikiRegexResult) {
+      const topic = { topic: wikiRegexResult[1] };
+
+      await ctx.scheduler.runAfter(0, internal.chat.fetchWikiSummary, topic);
+    }
   },
 });
 
@@ -23,5 +46,18 @@ export const fetchMessages = query({
 
     // Reverse the list so that it's in a chronological order.
     return messages.reverse();
+  },
+});
+
+export const fetchWikiSummary = internalAction({
+  args: { topic: v.string() },
+
+  handler: async (ctx, args) => {
+    const response = await fetch(`${WIKI_URL}${args.topic}`);
+    const body = getSummaryFromJson(await response.json());
+
+    const message = { user: "Wikipedia", body };
+
+    await ctx.scheduler.runAfter(0, api.chat.sendMessage, message);
   },
 });
