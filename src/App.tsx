@@ -5,13 +5,14 @@ import { faker } from "@faker-js/faker";
 const NAME = getOrSetFakeName();
 
 export default function App() {
+  const [newMessageText, setNewMessageText] = useState("");
+
   const messages = [
     { _id: "1", user: "Alice", body: "Good morning!" },
     { _id: "2", user: NAME, body: "Beautiful sunrise today" },
   ];
-  // TODO: Add mutation hook here.
 
-  const [newMessageText, setNewMessageText] = useState("");
+  // TODO: Add mutation hook here.
 
   useEffect(() => {
     // Make sure scrollTo works on button click in Chrome
