@@ -8,8 +8,9 @@ const NAME = getOrSetFakeName();
 
 export default function App() {
   const [newMessageText, setNewMessageText] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
 
-  const messages = useQuery(api.chat.fetchMessages);
+  const messages = useQuery(api.chat.fetchMessages, { nameFilter });
   const sendMessage = useMutation(api.chat.sendMessage);
 
   useEffect(() => {
@@ -26,6 +27,15 @@ export default function App() {
         <p>
           Connected as <strong>{NAME}</strong>
         </p>
+        <div className="name-filter">
+          <input
+            type="text"
+            value={nameFilter}
+            onChange={(e) => setNameFilter(e.target.value)}
+            placeholder="Filter messages by name…"
+            className="filter-input"
+          />
+        </div>
       </header>
       {messages?.map((message) => (
         <article

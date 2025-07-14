@@ -38,11 +38,19 @@ export const sendMessage = mutation({
 });
 
 export const fetchMessages = query({
-  args: {},
+  args: {
+    nameFilter: v.string(),
+  },
 
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     // Get most recent messages first
-    const messages = await ctx.db.query("messages").order("desc").take(50);
+    const messages = args.nameFilter
+      ? await ctx.db
+          .query("messages")
+          .withIndex("by_user", (q) => q.eq("user", args.nameFilter))
+          .order("desc")
+          .take(50)
+      : await ctx.db.query("messages").order("desc").take(50);
 
     // Reverse the list so that it's in a chronological order.
     return messages.reverse();
