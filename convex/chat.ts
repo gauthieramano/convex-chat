@@ -1,6 +1,29 @@
-import { api, internal } from "./_generated/api";
-import { mutation, query, internalAction } from "./_generated/server";
 import { v } from "convex/values";
+import { api, internal } from "./_generated/api";
+import { internalAction, mutation, query } from "./_generated/server";
+
+type WikiPage = {
+  pageid: string;
+  ns: number;
+  title: string;
+  extract: string;
+};
+
+type WikiMissing = {
+  ns: number;
+  title: string;
+  missing: "";
+};
+
+type WikiData = {
+  batchcomplete: string;
+  query: {
+    normalized: { from: string; to: string }[];
+    pages: { [pageId: string]: WikiPage | WikiMissing };
+  };
+};
+
+const MESSAGES_QUANTITY = 50;
 
 const WIKI_URL =
   "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro&explaintext&redirects=1&titles=";
@@ -8,13 +31,20 @@ const WIKI_URL =
 /** Search for the string after `"/wiki "` */
 const WIKI_REGEX = /^\/wiki\s(.+)/;
 
-function getSummaryFromJson(data: any) {
-  console.log(JSON.stringify(data, null, 2));
+const isWikiData = (data: unknown): data is WikiData =>
+  (data as WikiData).query?.pages !== undefined;
+
+const isWikiPage = (page: WikiPage | WikiMissing): page is WikiPage =>
+  (page as WikiPage).pageid !== undefined;
+
+const getExtract = (data: WikiData) => {
+  console.log(JSON.stringify(data, null, 0));
 
   const firstPageId = Object.keys(data.query.pages)[0];
+  const page = data.query.pages[firstPageId];
 
-  return data.query.pages[firstPageId].extract;
-}
+  return isWikiPage(page) ? page.extract : "No content found";
+};
 
 export const sendMessage = mutation({
   args: {
@@ -49,8 +79,8 @@ export const fetchMessages = query({
           .query("messages")
           .withIndex("by_user", (q) => q.eq("user", args.nameFilter))
           .order("desc")
-          .take(50)
-      : await ctx.db.query("messages").order("desc").take(50);
+          .take(MESSAGES_QUANTITY)
+      : await ctx.db.query("messages").order("desc").take(MESSAGES_QUANTITY);
 
     // Reverse the list so that it's in a chronological order.
     return messages.reverse();
@@ -62,9 +92,11 @@ export const fetchWikiSummary = internalAction({
 
   handler: async (ctx, args) => {
     const response = await fetch(`${WIKI_URL}${args.topic}`);
-    const body = getSummaryFromJson(await response.json());
+    const json = await response.json();
 
-    const message = { user: "Wikipedia", body };
+    const message = isWikiData(json)
+      ? { user: "Wikipedia", body: getExtract(json) }
+      : { user: "System", body: "Error: Unexpected response from Wiki" };
 
     await ctx.scheduler.runAfter(0, api.chat.sendMessage, message);
   },
