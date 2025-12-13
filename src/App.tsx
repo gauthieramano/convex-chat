@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { faker } from "@faker-js/faker";
 import { useMutation, useQuery } from "convex/react";
+import { useEffect, useState } from "react";
 import { api } from "../convex/_generated/api";
 
 // For demo purposes. In a real app, you'd have real user data.
@@ -13,6 +13,7 @@ export default function App() {
   const messages = useQuery(api.chat.fetchMessages, { nameFilter });
   const sendMessage = useMutation(api.chat.sendMessage);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll when new messages
   useEffect(() => {
     // Make sure scrollTo works on button click in Chrome
     setTimeout(() => {
@@ -63,7 +64,6 @@ export default function App() {
             setNewMessageText(text);
           }}
           placeholder="Write a message…"
-          autoFocus
         />
         <button type="submit" disabled={!newMessageText}>
           Send
@@ -74,11 +74,11 @@ export default function App() {
 }
 
 function getOrSetFakeName() {
-  const NAME_KEY = "tutorial_name";
-  const name = sessionStorage.getItem(NAME_KEY);
+  const nameKey = "tutorial_name";
+  const name = sessionStorage.getItem(nameKey);
   if (!name) {
     const newName = faker.person.firstName();
-    sessionStorage.setItem(NAME_KEY, newName);
+    sessionStorage.setItem(nameKey, newName);
     return newName;
   }
   return name;
