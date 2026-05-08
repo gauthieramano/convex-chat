@@ -2,18 +2,15 @@
   "name": "convex-tutorial",
   "version": "0.0.0",
   "scripts": {
-    "dev": "npm-run-all --parallel dev:backend dev:frontend",
+    "dev": "convex dev --start 'vite --open'",
     "build": "tsc && vite build",
-    "dev:backend": "convex dev",
-    "dev:frontend": "vite --open",
-    "predev": "convex dev --once",
     "lint": "eslint && biome check",
     "format": "biome format --write"
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
-    "convex": "^1.31.0",
-    "prettier": "3.6.2",
+    "convex": "1.38.0",
+    "prettier": "3.8.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
@@ -26,10 +23,9 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^9.39.2",
-    "npm-run-all2": "^7.0.0",
     "typescript": "~5.0.3",
     "typescript-eslint": "^8.49.0",
-    "vite": "^6.4.1"
+    "vite": "^6.4.2"
   },
   "engines": {
     "node": ">=20.20.0 || >=22.22.0 || >=24.13.0 || >=25.3.0"
